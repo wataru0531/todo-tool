@@ -1,0 +1,90 @@
+
+services:
+  mysql:
+    image: mysql:8.0
+    ports:
+      - 3306:3306 # 127.0.0.1:3306 : MySQLの3306
+      # MacOSの3306ポートと、コンテナを接続している。紐づけ。
+      # なので、Laravelプロジェクトは1270.0.0.1:8000で起動して、
+      # DBと接続する場合は、127.0.0.1:3306 で紐づける
+
+    volumes:
+      - mysql:/var/lib/mysql # Docker領域の/var/lib/mysql を
+                              # ボリュームのmysqlに保存しておく 
+    environment:
+      - MYSQL_DATABASE=mysql     # 起動時に作成するデータベース名
+      - MYSQL_USER=wataru         # 新しく作成するユーザー名
+      - MYSQL_PASSWORD=password  # パスワード
+      - MYSQL_RANDOM_ROOT_PASSWORD=1 # MySQLコンテナ起動時にDockerがランダムなrootパスワードを作成
+
+volumes: # 保存領域。Dockerの中の/var/lib/mysql を mysqlというVolumeに保持する
+  mysql:
+
+# ✅ LaravelでMySQLを使う方法
+# ① docker-composer.ymlを記述
+# ② .envを編集
+
+
+# ✅ LaravelとDockerを起動、同期できているかの確認など
+# ① docker compose up -d 
+# → バックグラウンドで動かす
+
+# ② docker compose ps
+# → 動いているか確認
+
+# ③ php artisan config:clear
+# → .envを変更したので、設定のキャッシュを一度クリア
+
+# ④ マイグレーションを実行 → ここでLaravelがMySQLに接続
+# migrate → DBの設定変更を実際のDBに適用する
+# php artisan migrate
+
+# ⑤ Docker側でMySQLコンテナに入って確認
+# ・docker compose exec mysql mysql -u wataru -p
+# ・パスワード入力
+# ・SHOW DATABASES; → データベース(スキーマ)の一覧を表示
+# 以下が出てきたらOK
+
+# +--------------------+
+# | Database           |
+# +--------------------+
+# | information_schema |
+# | mysql              |
+# | performance_schema |
+# +--------------------+
+# 3 rows in set (0.02 sec)
+
+# ⑥ php artisan serve
+# → LaravelのPHP開発サーバーを起動する 👉 composer run devをしているなら不要。
+# composer run devの中に、php artisan serve が実行されている
+
+# ⑥ Table Plusで確認
+
+# ✅ 開発の手順
+# ① docker compose up -d → Docker(MySQL)を起動
+# ② composer run dev → Laravelの起動
+
+# ✅ 新しくテーブルを作る方法
+# ⭐️ Laravelでは、直接DBを操作はしない。→ コマンドで操作していく
+# ① php artisan make:migration create_tasks_table
+# → database/migrations/ にマイグレーションファイルが作成される。
+
+# ② database/migrations/ のファイルを編集していく
+# ③ php artisan migrate
+# → DBの設定変更を実際のDBに適用する
+# ④ Table Plusを確認
+
+# ✅ mygrationを1つ前に戻す方法
+# → migrationファイルの、down()が発火する
+# php artisan migrate:rollback
+
+# ✅ モデルを作る
+# php artisan make:model Task
+
+# ✅ カラムを増やす
+# → migrationファイルを編集するのではない → 新たにmigrationファイルを作って編集
+# php artisan make:migration add_duedate_column
+# ※ 編集したら、php artisan migrate を実行していく
+
+
+
